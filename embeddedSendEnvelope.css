@@ -1,0 +1,65 @@
+.centered-content {
+    text-align: center;
+    margin-top: 1rem;
+}
+
+.button-spacing {
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.table-spacing {
+    margin-top: 1.5rem;
+}
+
+.logo {
+    width: 100px; /* Adjust the logo size as needed */
+    margin-bottom: 1rem;
+}
+
+.slds-text-align_center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.slds-m-top_medium {
+    margin-top: 1.5rem;
+}
+.slds-badge_success {
+    background-color: #28a745;
+    color: black;
+    font-weight: bold;
+    border-radius: 12px;
+    padding: 4px 8px;
+}
+
+.slds-badge_warning {
+    background-color: #ffc107;
+    color: black;
+    font-weight: bold;
+    border-radius: 12px;
+    padding: 4px 8px;
+}
+
+.slds-badge_inverse {
+    background-color: #a5c4df;
+    color: black;
+    font-weight: bold;
+    border-radius: 12px;
+    padding: 4px 8px;
+}
+.refresh-button {
+    margin-top: -1.2rem;
+    margin-right: 0.5rem;
+}
+/* Default styles for the badge */
+.hoverShade {
+    transition: background-color 0.3s ease;
+}
+
+/* Hover effect for the badge */
+.hoverShade:hover {
+    background-color: var(slds-theme_alert-texture); /* A light gray background for hover */
+    color: #000; /* Ensures text is readable */
+}
