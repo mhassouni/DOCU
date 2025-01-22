@@ -1,0 +1,16 @@
+<template>
+    <div class="slds-p-around_medium">
+        <lightning-textarea 
+            label="Reason for Voiding Envelope" 
+            value={voidReason} 
+            onchange={handleReasonChange} 
+            placeholder="Enter reason here..." 
+            class="slds-m-bottom_medium">
+        </lightning-textarea>
+        <lightning-button 
+            label="Void Envelope" 
+            onclick={handleVoidEnvelope} 
+            variant="destructive">
+        </lightning-button>
+    </div>
+</template>

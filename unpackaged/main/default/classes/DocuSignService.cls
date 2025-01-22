@@ -41,10 +41,16 @@ public with sharing class DocuSignService {
         if (res.getStatusCode() == 201) {
             Map<String, Object> responseMap = (Map<String, Object>) JSON.deserializeUntyped(res.getBody());
             String envelopeId = (String) responseMap.get('envelopeId');
-    
+            
+            // Retrieve the user's language
+            String userLanguage = UserInfo.getLanguage();
+
             // Retrieve the embedded sending URL
             String embeddedSendingUrl = getEmbeddedSendingUrl(envelopeId, opportunityId);
-    
+            
+
+          
+
             // Save the envelope record after callout operations
             saveEnvelopeRecord(opportunityId, envelopeId, 'Sent');
     
@@ -367,44 +373,58 @@ private static Blob downloadDocumentContentFromDocuSign(String envelopeId, Strin
     }
 }
 
+   /**
+     * Void a DocuSign envelope and update the status in Salesforce.
+     *
+     * @param envelopeId - The Salesforce record ID of the envelope
+     * @param voidReason - The reason for voiding the envelope
+     * @return - A success or error message
+     */
+@AuraEnabled
+public static String voidEnvelope(String envelopeId, String voidReason) {
+    Http http = new Http();
+    HttpRequest request = new HttpRequest();
+    
+    try {
+        // Fetch the envelope record
+        dfsle__Envelope__c envelope = [SELECT Id, dfsle__DocuSignId__c, Status__c FROM dfsle__Envelope__c WHERE Id = :envelopeId LIMIT 1];
 
-    @AuraEnabled
-    public static void cancelEnvelope(Id envelopeId) {
-        System.debug('Envelope ID passed: ' + envelopeId);
 
-        // Query the envelope record
-        dfsle__Envelope__c envelope;
-        try {
-            envelope = [
-                SELECT dfsle__DocuSignId__c
-                FROM dfsle__Envelope__c
-                WHERE Id = :envelopeId
-            ];
-        } catch (QueryException e) {
-            throw new IllegalArgumentException('No envelope record found for the provided ID: ' + envelopeId);
+        if (envelope == null || String.isBlank(envelope.dfsle__DocuSignId__c) || envelope.Status__c <> 'sent') {
+            return 'Envelope not found or invalid.';
         }
 
-        System.debug('Envelope fetched: ' + envelope);
+        // Construct the API endpoint
+        String endpoint = '/restapi/v2.1/accounts/30667966/envelopes/' + envelope.dfsle__DocuSignId__c;
+        request.setEndpoint('callout:DocuSign_eSign' + endpoint);
 
-        if (String.isBlank(envelope.dfsle__DocuSignId__c)) {
-            throw new IllegalArgumentException('The Envelope ID is missing.');
+        // Set the request details
+        request.setMethod('PUT');
+        request.setHeader('Content-Type', 'application/json');
+        request.setBody(JSON.serialize(new Map<String, Object>{
+            'status' => 'voided',
+            'voidedReason' => voidReason
+        }));
+
+        // Send the HTTP request
+        HttpResponse response = http.send(request);
+ 
+        if (response.getStatusCode() == 200) {
+            // Update the envelope status in Salesforce
+            envelope.Status__c = 'Voided';
+            update envelope;
+
+            return 'Envelope successfully voided.';
+        } else {
+            return 'Error voiding envelope: ' + response.getBody();
         }
-
-        HttpRequest req = new HttpRequest();
-        req.setEndpoint('callout:DocuSign_eSign/restapi/v2.1/accounts/{accountId}/envelopes/' + envelope.dfsle__DocuSignId__c);
-        req.setMethod('PUT');
-        req.setHeader('Content-Type', 'application/json');
-        req.setBody('{"status":"voided","voidedReason":"Cancelled by user"}');
-
-        Http http = new Http();
-        HttpResponse res = http.send(req);
-
-        if (res.getStatusCode() != 200) {
-            throw new IllegalArgumentException('Failed to cancel the envelope: ' + res.getBody());
-        }
-      
-
+    } catch (Exception e) {
+        return 'Error: ' + e.getMessage();
     }
+} 
+
+
+    
 
 
 }
